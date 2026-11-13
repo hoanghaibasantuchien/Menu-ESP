@@ -11,7 +11,7 @@ jobs:
       
       - name: Dọn dẹp thư mục lỗi
         run: |
-          rm -rf Menu-ESP
+          find . -name "Menu-ESP" -type d -exec rm -rf {} + || true
           ls -la
 
       - name: set up JDK 17
