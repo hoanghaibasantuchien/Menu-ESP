@@ -21,6 +21,7 @@ jobs:
           
       - name: Build with Gradle 8.5
         run: |
+          ls -R app/src/main/cpp/
           wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
           unzip -q gradle-8.5-bin.zip
           export PATH=$PWD/gradle-8.5/bin:$PATH
