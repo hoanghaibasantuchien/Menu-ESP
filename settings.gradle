@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "MenuOverlay"
+rootProject.name = "Menu-ESP"
 include ':app'
