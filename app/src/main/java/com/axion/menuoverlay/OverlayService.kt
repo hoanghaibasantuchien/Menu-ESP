@@ -22,10 +22,25 @@ class OverlayService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
         
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val ch = NotificationChannel(
+                "menu_overlay_channel", "MENU ESP BY HOANG HAI",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            val mgr = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            mgr.createNotificationChannel(ch)
+        }
+
+        val notification = NotificationCompat.Builder(this, "menu_overlay_channel")
+            .setContentTitle("MENU ESP BY HOANG HAI")
+            .setContentText("Đang chạy")
+            .setSmallIcon(android.R.drawable.ic_menu_manage)
+            .setOngoing(true)
+            .build()
+
         try {
-            startForeground(NOTIF_ID, buildNotification())
+            startForeground(1001, notification)
         } catch (e: Exception) {
             Log.e("OverlayService", "Lỗi startForeground: ${e.message}")
         }
@@ -33,6 +48,7 @@ class OverlayService : Service() {
         wm = getSystemService(WINDOW_SERVICE) as WindowManager
 
         try {
+            // Tạo lớp vẽ ESP
             espView = EspOverlayView(this)
             espParams = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
@@ -47,15 +63,17 @@ class OverlayService : Service() {
             ).apply { gravity = Gravity.TOP or Gravity.START }
             wm.addView(espView, espParams)
 
+            // Tạo Menu nổi
             menu = FloatingMenu(this, wm).also { it.show() }
         } catch (e: Exception) {
-            Log.e("OverlayService", "Lỗi addView: ${e.message}")
+            Log.e("OverlayService", "Lỗi tạo giao diện: ${e.message}")
         }
     }
 
     override fun onDestroy() {
         try {
-            menu?.hide(); menu = null
+            menu?.hide()
+            menu = null
             espView?.let { wm.removeView(it) }
             espView = null
         } catch (e: Exception) {}
@@ -63,29 +81,4 @@ class OverlayService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val ch = NotificationChannel(
-                CHANNEL_ID, "MENU ESP",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            val mgr = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            mgr.createNotificationChannel(ch)
-        }
-    }
-
-    private fun buildNotification(): Notification {
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("MENU ESP BY HOANG HAI")
-            .setContentText("Đang chạy")
-            .setSmallIcon(android.R.drawable.ic_menu_manage)
-            .setOngoing(true)
-            .build()
-    }
-
-    companion object {
-        const val NOTIF_ID = 1001
-        const val CHANNEL_ID = "menu_overlay_channel"
-    }
 }
