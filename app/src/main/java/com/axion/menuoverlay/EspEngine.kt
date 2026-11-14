@@ -5,23 +5,15 @@ import android.graphics.Rect
 
 object EspEngine {
 
-    init {
-        // Bật lại thư viện C++
-        System.loadLibrary("espcore")
-    }
+    // Đã tạm tắt C++ để test bằng Kotlin
+    // init { System.loadLibrary("espcore") }
 
-    // Vùng minimap mặc định (sẽ được ghi đè từ MainActivity)
     var minimapRegion: Rect = Rect(0, 0, 0, 0)
-    
-    var hMin = 340; var hMax = 20
-    var sMin = 120
-    var vMin = 90
-    var minBlobPx = 6
-    var maxBlobPx = 400
 
     data class Blob(val cx: Int, val cy: Int, val w: Int, val h: Int)
 
     fun detect(bmp: Bitmap): List<Blob> {
+        // Nếu chưa set vùng minimap thì lấy toàn màn hình
         val region = if (minimapRegion.width() > 0) minimapRegion
                      else Rect(0, 0, bmp.width, bmp.height)
 
@@ -38,27 +30,22 @@ object EspEngine {
         crop.getPixels(pixels, 0, w, 0, 0, w, h)
         crop.recycle()
 
-        val raw = nativeDetectRedBlobs(
-            pixels, w, h,
-            minBlobPx, maxBlobPx,
-            hMin, hMax, sMin, vMin
-        )
+        val blobs = ArrayList<Blob>()
 
-        val blobs = ArrayList<Blob>(raw.size / 4)
-        var i = 0
-        while (i + 3 < raw.size) {
-            blobs.add(Blob(
-                raw[i] + x0, raw[i + 1] + y0,
-                raw[i + 2], raw[i + 3]
-            ))
-            i += 4
+        // Thuật toán quét màu đỏ bằng Kotlin
+        for (y in 0 until h step 4) {
+            for (x in 0 until w step 4) {
+                val p = pixels[y * w + x]
+                val r = (p shr 16) and 0xFF
+                val g = (p shr 8) and 0xFF
+                val b = p and 0xFF
+
+                // Nếu là màu đỏ (R cao, G và B thấp)
+                if (r > 180 && g < 90 && b < 90) {
+                    blobs.add(Blob(x + x0, y + y0, 12, 12)) // Vẽ box 12x12
+                }
+            }
         }
         return blobs
     }
-
-    private external fun nativeDetectRedBlobs(
-        pixels: IntArray, width: Int, height: Int,
-        minBlobPx: Int, maxBlobPx: Int,
-        hMin: Int, hMax: Int, sMin: Int, vMin: Int
-    ): IntArray
 }
