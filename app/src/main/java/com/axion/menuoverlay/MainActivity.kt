@@ -44,6 +44,12 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // CÀI ĐẶT VÙNG MINIMAP TẠI ĐÂY
+        // 4 số này tương ứng với: Left, Top, Right, Bottom của vùng minimap trên màn hình game
+        // Dựa vào ảnh ông gửi, minimap nằm góc trên trái. Tôi đang ước lượng là 400x400 pixel.
+        // Nếu box vẽ bị lệch, ông tăng/giảm số 400 này cho vừa khít cái minimap nhé.
+        EspEngine.minimapRegion = android.graphics.Rect(0, 0, 400, 400)
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 requestNotifPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -125,7 +131,7 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this@MainActivity, "Menu + ESP đã bật", Toast.LENGTH_SHORT).show()
                     moveTaskToBack(true)
                 } catch (e: Exception) {
-                    Toast.makeText(this@MainActivity, "Lỗi Xiaomi chặn: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@MainActivity, "Lỗi: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
