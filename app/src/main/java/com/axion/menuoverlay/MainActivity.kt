@@ -1,9 +1,12 @@
 package com.axion.menuoverlay
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
@@ -22,6 +25,8 @@ class MainActivity : AppCompatActivity() {
     private var projectionData: Intent? = null
     private var projectionResultCode: Int = Activity.RESULT_CANCELED
 
+    private val requestNotifPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
     private val projectionLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK && result.data != null) {
@@ -38,6 +43,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestNotifPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
 
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -101,17 +112,21 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this@MainActivity, "Chưa cấp quyền chụp màn hình", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
-                ContextCompat.startForegroundService(
-                    this@MainActivity,
-                    Intent(this@MainActivity, OverlayService::class.java)
-                )
-                ScreenCaptureService.start(
-                    this@MainActivity,
-                    projectionResultCode,
-                    projectionData!!
-                )
-                Toast.makeText(this@MainActivity, "Menu + ESP đã bật", Toast.LENGTH_SHORT).show()
-                moveTaskToBack(true)
+                try {
+                    ContextCompat.startForegroundService(
+                        this@MainActivity,
+                        Intent(this@MainActivity, OverlayService::class.java)
+                    )
+                    ScreenCaptureService.start(
+                        this@MainActivity,
+                        projectionResultCode,
+                        projectionData!!
+                    )
+                    Toast.makeText(this@MainActivity, "Menu + ESP đã bật", Toast.LENGTH_SHORT).show()
+                    moveTaskToBack(true)
+                } catch (e: Exception) {
+                    Toast.makeText(this@MainActivity, "Lỗi Xiaomi chặn: ${e.message}", Toast.LENGTH_LONG).show()
+                }
             }
         }
 
